@@ -24,7 +24,7 @@ if not GROQ_API_KEY:
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 MODEL = "llama3.2"
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 OWNER_ID = 1474347479301361787
 ALLOWED_SERVER_ID = 1474349501400612986
@@ -248,4 +248,5 @@ async def on_message(message):
 
 
 bot.run(TOKEN)
+
 
