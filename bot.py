@@ -16,8 +16,6 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     raise ValueError("DISCORD_TOKEN not found")
 
-groq_client = Groq(api_key=GROQ_API_KEY)
-
 MODEL = "llama3.2"
 
 OWNER_ID = 1474347479301361787
@@ -234,6 +232,7 @@ async def on_message(message):
 
 
 bot.run(TOKEN)
+
 
 
 
