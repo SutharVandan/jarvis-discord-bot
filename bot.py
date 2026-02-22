@@ -12,18 +12,13 @@ import requests
 # ---------------- SETTINGS ----------------
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not TOKEN:
     raise ValueError("DISCORD_TOKEN not found")
 
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY not found")
-
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 MODEL = "llama3.2"
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 OWNER_ID = 1474347479301361787
 ALLOWED_SERVER_ID = 1474349501400612986
@@ -239,6 +234,7 @@ async def on_message(message):
 
 
 bot.run(TOKEN)
+
 
 
 
