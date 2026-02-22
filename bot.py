@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import ollama
-from groq import Groq
 import json
 import os
 import asyncio
@@ -93,52 +92,44 @@ def save_logs():
 async def on_ready():
     print(f"{bot.user} is ONLINE (Hybrid Smart Mode Enabled)")
 
+#------------cloud ai------------
+async def cloud_ai_response(user_messages):
+    try:
+        # Hugging Face free API (replace with your model)
+        API_URL = "https://api-inference.huggingface.co/models/gpt2"
+        headers = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
+
+        # Combine all messages into one input string
+        payload = {"inputs": " ".join([m["content"] for m in user_messages])}
+
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
+        data = response.json()
+
+        # Hugging Face returns a list of dicts
+        return data[0]["generated_text"]
+    except Exception as e:
+        return f"Cloud AI error: {str(e)}"
+        
 # -------------AI -----------------
 OLLAMA_REMOTE_URL = "https://stubborn-gossipingly-karin.ngrok-free.dev"
 
 async def generate_ai_response(channel_id):
+    conversation = [{"role": "user", "content": f"{msg['name']}: {msg['content']}"} for msg in channel_history[channel_id]]
 
-    conversation = []
-
-    for msg in channel_history[channel_id]:
-        conversation.append({
-            "role": "user",
-            "content": f"{msg['name']}: {msg['content']}"
-        })
-
-    messages = [
-        {"role": "system", "content": CUSTOM_PROMPT}
-    ] + conversation
-
-    # ---- Try Ollama ----
+    # Try Ollama if PC is ON
     try:
-        response = ollama.chat(
-            model=MODEL,
-            messages=messages
-        )
-
+        response = ollama.chat(model=MODEL, messages=conversation)
         reply = response.get("message", {}).get("content")
         if reply:
-            print("🖥 Using OLLAMA")
+            print("🖥 Using Ollama")
             return reply
+    except:
+        print("Ollama offline, using cloud fallback")
 
-    except Exception as e:
-        print("Ollama failed:", e)
-
-    # ---- Try Groq ----
-    try:
-        completion = groq_client.chat.completions.create(
-            model="llama3-8b-8192",   # safe working model
-            messages=messages,
-            temperature=0.7
-        )
-
-        print("🌐 Using GROQ")
-        return completion.choices[0].message.content
-
-    except Exception as e:
-        print("GROQ ERROR:", e)
-        return f"Groq error: {str(e)}"
+    # Cloud AI fallback
+    reply = await cloud_ai_response(conversation)
+    print("🌐 Using Cloud AI")
+    return reply
 # ---------------- MESSAGE EVENT ----------------
 
 @bot.event
@@ -248,6 +239,7 @@ async def on_message(message):
 
 
 bot.run(TOKEN)
+
 
 
 
