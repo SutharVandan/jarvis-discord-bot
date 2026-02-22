@@ -110,33 +110,35 @@ async def generate_ai_response(channel_id):
         {"role": "system", "content": CUSTOM_PROMPT}
     ] + conversation
 
-    # Try remote Ollama
+    # ---- Try Ollama ----
     try:
-        response = requests.post(
-            OLLAMA_REMOTE_URL,
-            json={
-                "model": MODEL,
-                "messages": messages
-            },
-            timeout=4
+        response = ollama.chat(
+            model=MODEL,
+            messages=messages
         )
 
-        if response.status_code == 200:
-            print("🖥 Using OLLAMA (PC online)")
-            return response.json()["message"]["content"]
+        reply = response.get("message", {}).get("content")
+        if reply:
+            print("🖥 Using OLLAMA")
+            return reply
 
-    except:
-        print("PC Offline → Using Groq")
+    except Exception as e:
+        print("Ollama failed:", e)
 
-    # Fallback to Groq
-    completion = groq_client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=messages,
-        temperature=0.7
-    )
+    # ---- Try Groq ----
+    try:
+        completion = groq_client.chat.completions.create(
+            model="llama3-8b-8192",   # safe working model
+            messages=messages,
+            temperature=0.7
+        )
 
-    print("🌐 Using GROQ")
-    return completion.choices[0].message.content
+        print("🌐 Using GROQ")
+        return completion.choices[0].message.content
+
+    except Exception as e:
+        print("GROQ ERROR:", e)
+        return f"Groq error: {str(e)}"
 # ---------------- MESSAGE EVENT ----------------
 
 @bot.event
@@ -239,10 +241,11 @@ async def on_message(message):
             await message.channel.send(embed=embed)
 
     except Exception as e:
-        print("ERROR:", e)
-        await message.channel.send("⚠️ Something went wrong.")
+        print("MAIN ERROR:", e)
+        await message.channel.send(f"Main error: {str(e)}")
 
 # ---------------- RUN ----------------
 
 
 bot.run(TOKEN)
+
