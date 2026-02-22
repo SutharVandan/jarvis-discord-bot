@@ -88,17 +88,14 @@ async def on_ready():
 #------------cloud ai------------
 async def cloud_ai_response(user_messages):
     try:
-        # Hugging Face free API (replace with your model)
-        API_URL = "https://api-inference.huggingface.co/models/gpt2"
+        API_URL = "https://api-inference.huggingface.co/models/TheBloke/vicuna-7B-1.1-HF"
         headers = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
-
-        # Combine all messages into one input string
-        payload = {"inputs": " ".join([m["content"] for m in user_messages])}
-
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=20)
+        payload = {
+            "inputs": " ".join([m["content"] for m in user_messages]),
+            "parameters": {"max_new_tokens": 200}
+        }
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         data = response.json()
-
-        # Hugging Face returns a list of dicts
         return data[0]["generated_text"]
     except Exception as e:
         return f"Cloud AI error: {str(e)}"
@@ -232,6 +229,7 @@ async def on_message(message):
 
 
 bot.run(TOKEN)
+
 
 
 
